@@ -94,6 +94,7 @@ class Personaje:
             print(f"{self.nombre} is dead")
     
     
+    
     #FIN
 
     def protector(self, objetivo):
@@ -126,17 +127,47 @@ class Guerrero(Personaje):
 
     def protegido(self, protegido):
         self.lst_protegidos.append(protegido)
-        
+    
+    def ataque_tornado(self, clanes, rondas):
+        if self.puntos_vida >= 100 and rondas % 2 == 0:
+            clan_filtrado = [clan for clan in clanes if clan.nombre != self.clan]
+            
+            for index, clan in enumerate(clan_filtrado):
+                text_speed(f"{index+1} | {clan.nombre}")
+
+            while True:
+                try:
+                    opc = int(input("Select your choice: ")) - 1
+                    if 0 <= opc < len(clanes):
+                        clan = clanes[opc] #Se elige el clan a atacar
+                        miembros_clan = clan.miembros # Se instancian los miembros
+                        text_speed(f"¡The warrior({self.nombre}) shed blood from each member of the clan: {clan.nombre}🩸⚔️\n")
+                                
+                        for miembro in miembros_clan:
+                            self.realizar_ataque(miembro, "Tornado attack! 🌪️", 2)
+                            text_speed(f"{miembro.nombre} of the clan {clan.nombre} has been attacked by Tornado attack! 🌪️ of the Warrior {self.nombre} !\n")
+                            print()
+                        return miembro
+                    else:
+                        text_speed(f"That clan doesn't even exist")
+                except ValueError:
+                    text_speed("INVALID OPTION, PLEASE TRY AGAIN")
+        else:
+            print("I can´t cast the tornado attack in this time...")
+            input("press ENTER to continue")
 #***********************************************************************
 
 class Mago(Personaje):
-    def __init__(self, nombre, titulo = "Sorcerer", color = Fore.GREEN):
+    cont_pociones_mago = 0
+    def __init__(self, nombre, titulo="Sorcerer", color=Fore.GREEN):
         super().__init__(nombre, titulo)
         self.fuerza = 80
         self.puntos_vida = 100
         self.defensa = 80
         self.ataque = 90
         self.color = color
+        self.bolsillo_pociones_mago = []
+        self.barra_mana = 50
         # Guardamos los valores máximos/iniciales de cada atributo
         self.fuerza_original = self.fuerza
         self.vida_original = self.puntos_vida        
@@ -177,14 +208,45 @@ class Mago(Personaje):
         if self.barra_mana == 100:
             print(f"{self.nombre} launches double attack {objetivo.nombre}!")
             estado_objetivo = self.realizar_ataque(objetivo,"double attack",10)
-            self.barra_mana -= 50  # Consumir mana por el ataque doble
-            self.mostrar_barra_mana()
-    
+
     def __str__(self):
         return (f"{self.titulo}: {self.nombre}\n"
                 f"Strength: {self.fuerza}, Life Points: {self.puntos_vida}, "
                 f"Defense: {self.defensa}, Attack: {self.ataque}, "
                 f"Clan: {self.clan}, Mana Bar: {self.barra_mana}")
+        
+    def conceder_curacion(self, lst_pjs, pj_receptor):
+        for index, pj in enumerate(lst_pjs):
+            print(f"{index + 1} | {pj.titulo} {pj.nombre}")
+        
+        while True:
+            try:
+                opc = input(f"Select number of the character that you wanna heal with the potion (or type 'exit' to cancel): ")
+                if opc.lower() == 'exit':
+                    print("Operation cancelled.")
+                    return pj_receptor  # Salir de la función si el usuario cancela
+                
+                opc = int(opc) - 1  # Convertir a entero y ajustar el índice
+                if 0 <= opc < len(lst_pjs):  # Verifica que la opción esté en la lista
+                    if self.cont_pociones_mago > 0:
+                        pj_receptor = lst_pjs[opc]  # En la posición que se eligió en la opción
+                        self.pj_receptor = pj_receptor  # PJ como un objeto
+                        curacion = self.bolsillo_pociones_mago.pop()  # Saca la poción del bolsillo
+                        self.cont_pociones_mago -= 1  # Decrementa el contador de pociones
+                        text_speed(f"{self.nombre} has used a healing potion 🥤 on {self.pj_receptor.nombre}")
+                        pj_receptor.fuerza += curacion
+                        pj_receptor.puntos_vida += curacion
+                        pj_receptor.defensa += curacion
+                        pj_receptor.ataque += curacion
+                        input("Press ENTER to continue! ")
+                    else:
+                        input("No more potions left!")
+                    return pj_receptor
+                else:
+                    input("That character doesn't even exist!")
+            except ValueError:
+                input("Invalid option, please enter a number.")
+
         
 
 #***********************************************************************
@@ -271,20 +333,21 @@ class Arquero(Personaje):
 #***********************************************************************
 
 class Fundador(Mago):
-    cont_pociones = 0
+    cont_pociones_fundador = 0
     def __init__(self, nombre, color = Fore.BLUE):
-        super().__init__(nombre, "Founder")
+        Personaje.__init__(self, nombre, "Founder")
         self.fuerza = 100
         self.puntos_vida = 110
         self.defensa = 110
         self.ataque = 110
-        self.barra_mana = None
         self.color = color
         self.fuerza_original = self.fuerza
         self.vida_original = self.puntos_vida        
         self.defensa_original = self.defensa
         self.ataque_original = self.ataque
-        self.slot_pociones = []
+        self.bolsillo_pociones_fundador = []
+        self.estado_ataque_final = False
+        self.mana = None
         text_speed(f"{self.nombre} has founded a clan.")
         
     def crear_pociones(self):
@@ -385,6 +448,46 @@ class Fundador(Mago):
                     text_speed(f"{elegir_clan} doesn't even exist!")
             except ValueError:
                 text_speed("Please, select by number")
+
+
+                
+    def _atacar_desesperado_clan_aleatorio(self, clanes_filtrado):
+        clan_random = random.choice(clanes_filtrado) # * Selección del clan de manera aleatoria *
+        clan = clan_random.miembros
+        for miembro in clan:
+            self.realizar_ataque(miembro, self.ataque_desesperado, 1)
+            text_speed(f"\n{miembro.nombre} of the clan {clan_random.nombre} has been attacked with {self.ataque_desesperado} of the {self.titulo} {self.nombre} !\n")
+            text_speed(f"-Strenght: {miembro.fuerza}\n-Life Points: {miembro.puntos_vida}\n-Defense: {miembro.defensa}\n-Attack: {miembro.ataque}\n")
+
+        text_speed(f"I've taken my choice randomly and I decide to attack {Fore.MAGENTA} {clan_random.nombre} {Style.RESET_ALL}")
+        text_speed(f"The {self.titulo} {self.nombre} has casted the definitive attack {self.ataque_desesperado} and now the {self.titulo} is exhausted...")
+        self._reducir_atributos()
+
+    def _seleccionar_personaje_aleatorio(self,lst_personajes):
+        # con esta variable calculo la cantidad de personajer que hay en la lista_personajes
+        cantidad_aleatoria_objetivo = random.randint(1,len(lst_personajes))
+        # toma la cantidad arrojada en el random y lo guarta en la variable cantidad_aleatoria_objetivo
+        objetivos_aleatorio = random.sample(lst_personajes,cantidad_aleatoria_objetivo)
+
+        for objetivo in objetivos_aleatorio:
+            self.realizar_ataque(objetivo,self.ataque_desesperado,1)
+            text_speed(f"\n{objetivo.nombre} of the clan {objetivo.clan} has been attacked with {self.ataque_desesperado} of the {self.titulo} {self.nombre} !\n  ")
+            text_speed(f"-Strenght: {objetivo.fuerza}\n-Life points: {objetivo.puntos_vida}\n-Defense: {objetivo.defensa}\n-Attack: {objetivo.ataque}\n")
+        
+        text_speed(f"I have randomly attacked a number of {cantidad_aleatoria_objetivo}")
+        self._reducir_atributos()
+
+
+    
+    def _reducir_atributos(self):
+        self.estado_ataque_final = True
+        self.fuerza = self.fuerza_original // 2
+        self.puntos_vida //= 2
+        self.defensa //= 2
+        self.ataque = self.ataque_original // 2
+        text_speed(f"The {self.titulo} {self.nombre} has casted the definitive attack {self.ataque_desesperado} and now the {self.titulo} is exhausted...")
+        text_speed(f"The {self.titulo} {self.nombre} has decreased his/her life by half...")
+        text_speed(f"-Strength: {self.fuerza}\n-Life Points: {self.puntos_vida}\n-Defense: {self.defensa}\n-Attack: {self.ataque}")
 #***********************************************************************
 
 
