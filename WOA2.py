@@ -376,9 +376,17 @@ if __name__ == "__main__":
                     estadoObjetivo, objetivo = jugadorEnTurno.realizar_ataque(objetivo,"storm meteorite",5)
                     eliminarPersonaje(objetivo, jugadorEnTurno)
                 elif opc == 4:
-                    estadoObjetivo, objetivo = jugadorEnTurno.ataque_doble(objetivo,"double attack",10)
+                    while True: # Limite del mana del ataque doble
+                        if jugadorEnTurno.barra_mana >= 100:
+                            estadoObjetivo, objetivo = jugadorEnTurno.ataque_doble(objetivo, "double attack", 10)
+                            break
+                        else:
+                            print(f"{jugadorEnTurno.nombre} doesn't have enough mana for a double attack.")
+                            print(f"{jugadorEnTurno.nombre} performs a normal attack instead.")
+                            estadoObjetivo, objetivo = jugadorEnTurno.realizar_ataque(objetivo, "Attack", 5)
+                            break
                     if estadoObjetivo == 0:
-                        eliminarPersonaje(objetivo, jugadorEnTurno)
+                        eliminarPersonaje(objetivo, jugadorEnTurno)     
 
             elif jugadorEnTurno.titulo == "Archer":
                 jugadorEnTurno.mostrar_flechas()

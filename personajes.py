@@ -165,9 +165,12 @@ class Mago(Personaje):
 
     def ataque_doble(self, objetivo):
         if self.barra_mana == 100:
-            print(f"{self.nombre} launches double attack {objetivo.nombre}!")
+            print(f"\n{Fore.YELLOW}⚔️ {self.nombre} launches double attack on {objetivo.nombre}! ⚔️{Style.RESET_ALL}")
             estado_objetivo = self.realizar_ataque(objetivo,"double attack",10)
-        
+            self.barra_mana -= 100  # Consumir mana por el ataque doble
+            print(f"{self.nombre} You have used 100 mana. Remaining mana: {self.barra_mana}/100")
+        else:
+            print(f"\n{Fore.RED}⚠️ Not enough mana for double attack! Need 100 MP ⚠️{Style.RESET_ALL}")
     def __str__(self):
         return (f"{self.titulo}: {self.nombre}\n"
                 f"Strength: {self.fuerza}, Life Points: {self.puntos_vida}, "
@@ -265,7 +268,7 @@ class Fundador(Mago):
         self.mana = 50
         text_speed(f"{self.nombre} has founded a clan.")
 
- 
+
     def mostrar_barra_mana(self):
         barra = '|' + '█' * (self.barra_mana // 5) + '░' * ((100 - self.barra_mana) // 5) + '|'
         return f"Mana: {self.barra_mana}/100 {barra}"    
