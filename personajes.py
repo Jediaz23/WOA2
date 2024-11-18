@@ -154,15 +154,6 @@ class Mago(Personaje):
             self.barra_mana = 100
         print(f"{self.nombre} has regenerated {regeneracion} mana.⭐ Mana bar: {self.barra_mana}.⭐")
         
-
-    def usar_hechizo(self, costo_mana):
-        if self.barra_mana >= costo_mana:
-            self.barra_mana -= costo_mana
-            print(f"{self.nombre} you have used a spell. Cost mana: {costo_mana}.⭐ Mana Bar: {self.barra_mana}.⭐")
-        else:
-            print(f"{self.nombre} does not have enough mana to use the spell.❌")
-
-
     def ataque_doble(self, objetivo):
         if self.barra_mana == 100:
             print(f"\n{Fore.YELLOW}⚔️ {self.nombre} launches double attack on {objetivo.nombre}! ⚔️{Style.RESET_ALL}")
