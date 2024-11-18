@@ -396,7 +396,7 @@ if __name__ == "__main__":
                         else:
                             print(f"{jugadorEnTurno.nombre} doesn't have enough mana for a double attack.")
                             print(f"{jugadorEnTurno.nombre} performs a normal attack instead.")
-                            estadoObjetivo, objetivo = jugadorEnTurno.realizar_ataque(objetivo, "Attack", 5)
+                            estadoObjetivo, objetivo = jugadorEnTurno.realizar_ataque(objetivo, 5)
                             break
                     if estadoObjetivo == 0:
                         eliminarPersonaje(objetivo, jugadorEnTurno)     
