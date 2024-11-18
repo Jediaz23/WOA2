@@ -1,8 +1,6 @@
-
 import random
 from resources import *
 from WOA2 import lista_personajes
-from tqdm import tqdm
 
 class Personaje:
     def __init__(self, nombre, titulo, clan = None):
@@ -85,9 +83,9 @@ class Personaje:
         if self.puntos_vida != 0:
             self.puntos_vida -= 1
         if self.puntos_vida > 0:
-            print("estas bajo el ataque de flecha venenosa ")
+            print("you are under the attack of a poinsoned arrow")
         if   self.puntos_vida == 0:
-            print(f"{self.nombre} ha muerto")
+            print(f"{self.nombre} is dead")
     
     
     
@@ -123,11 +121,39 @@ class Guerrero(Personaje):
 
     def protegido(self, protegido):
         self.lst_protegidos.append(protegido)
-        
+    
+    def ataque_tornado(self, clanes, rondas):
+        if self.puntos_vida >= 100 and rondas % 2 == 0:
+            clan_filtrado = [clan for clan in clanes if clan.nombre != self.clan]
+            
+            for index, clan in enumerate(clan_filtrado):
+                text_speed(f"{index+1} | {clan.nombre}")
+
+            while True:
+                try:
+                    opc = int(input("Select your choice: ")) - 1
+                    if 0 <= opc < len(clanes):
+                        clan = clanes[opc] #Se elige el clan a atacar
+                        miembros_clan = clan.miembros # Se instancian los miembros
+                        text_speed(f"¡The warrior({self.nombre}) shed blood from each member of the clan: {clan.nombre}🩸⚔️\n")
+                                
+                        for miembro in miembros_clan:
+                            self.realizar_ataque(miembro, "Tornado attack! 🌪️", 2)
+                            text_speed(f"{miembro.nombre} of the clan {clan.nombre} has been attacked by Tornado attack! 🌪️ of the Warrior {self.nombre} !\n")
+                            print()
+                        return miembro
+                    else:
+                        text_speed(f"That clan doesn't even exist")
+                except ValueError:
+                    text_speed("INVALID OPTION, PLEASE TRY AGAIN")
+        else:
+            print("I can´t cast the tornado attack in this time...")
+            input("press ENTER to continue")
 #***********************************************************************
 
 class Mago(Personaje):
-    def __init__(self, nombre, titulo="Sorcerer", color=Fore.GREEN):
+    cont_pociones_mago = 0
+    def __init__(self, nombre, titulo = "Sorcerer", color = Fore.GREEN):
         super().__init__(nombre, titulo)
         self.fuerza = 80
         self.puntos_vida = 100
@@ -140,80 +166,34 @@ class Mago(Personaje):
         self.vida_original = self.puntos_vida        
         self.defensa_original = self.defensa
         self.ataque_original = self.ataque
-        # Solo mostrar la barra de mana si es un Mago directamente
-        if type(self) is Mago:
-            print(f"\n{Fore.CYAN}✧ {self.nombre}'s Mana ✧{Style.RESET_ALL}")
-            self.mostrar_barra_mana()
-
-    def mostrar_barra_mana(self):
-        # Solo mostrar si es la clase Mago directamente
-        if type(self) == Mago:
-            with tqdm(total=100, 
-                     bar_format='{desc}{percentage:3.0f}%|{bar}|',
-                     desc=f"{Fore.CYAN}🔮 {Style.RESET_ALL}",
-                     ncols=50,
-                     colour='blue') as pbar:
-                pbar.n = self.barra_mana
-                pbar.refresh()
-    
+        self.barra_mana = 50
+        
     def regeneracion_mana(self):
         regeneracion = random.randint(5, 25)
-        self.barra_mana = min(100, self.barra_mana + regeneracion)
-        print(f"{self.nombre} ha regenerado {regeneracion} de mana. Barra de mana: {self.barra_mana}")
-        self.mostrar_barra_mana()
+        self.barra_mana += regeneracion
+        if self.barra_mana > 100:
+            self.barra_mana = 100
+        print(f"{self.nombre} genereated {regeneracion} of mana. mana's bar: {self.barra_mana}")
+        
 
     def usar_hechizo(self, costo_mana):
         if self.barra_mana >= costo_mana:
             self.barra_mana -= costo_mana
-            print(f"{self.nombre} you have used a spell. Cost mana: {costo_mana}.⭐ Mana Bar: {self.barra_mana}.⭐")
+            print(f"{self.nombre} used a spell. Mana cost: {costo_mana}. Mana's bar: {self.barra_mana}")
         else:
-            print(f"{self.nombre} does not have enough mana to use the spell.❌")
+            print(f"{self.nombre} haven't enough mana to use this spell.")
+
 
     def ataque_doble(self, objetivo):
         if self.barra_mana == 100:
             print(f"{self.nombre} launches double attack {objetivo.nombre}!")
             estado_objetivo = self.realizar_ataque(objetivo,"double attack",10)
-            self.barra_mana -= 50  # Consumir mana por el ataque doble
-            self.mostrar_barra_mana()
-    
+
     def __str__(self):
         return (f"{self.titulo}: {self.nombre}\n"
                 f"Strength: {self.fuerza}, Life Points: {self.puntos_vida}, "
                 f"Defense: {self.defensa}, Attack: {self.ataque}, "
                 f"Clan: {self.clan}, Mana Bar: {self.barra_mana}")
-        
-    def conceder_curacion(self, lst_pjs, pj_receptor):
-        for index, pj in enumerate(lst_pjs):
-            print(f"{index + 1} | {pj.titulo} {pj.nombre}")
-        
-        while True:
-            try:
-                opc = input(f"Select number of the character that you wanna heal with the potion (or type 'exit' to cancel): ")
-                if opc.lower() == 'exit':
-                    print("Operation cancelled.")
-                    return pj_receptor  # Salir de la función si el usuario cancela
-                
-                opc = int(opc) - 1  # Convertir a entero y ajustar el índice
-                if 0 <= opc < len(lst_pjs):  # Verifica que la opción esté en la lista
-                    if self.cont_pociones_mago > 0:
-                        pj_receptor = lst_pjs[opc]  # En la posición que se eligió en la opción
-                        self.pj_receptor = pj_receptor  # PJ como un objeto
-                        curacion = self.bolsillo_pociones_mago.pop()  # Saca la poción del bolsillo
-                        self.cont_pociones_mago -= 1  # Decrementa el contador de pociones
-                        text_speed(f"{self.nombre} has used a healing potion 🥤 on {self.pj_receptor.nombre}")
-                        pj_receptor.fuerza += curacion
-                        pj_receptor.puntos_vida += curacion
-                        pj_receptor.defensa += curacion
-                        pj_receptor.ataque += curacion
-                        input("Press ENTER to continue! ")
-                    else:
-                        text_speed("No more potions left!")
-                    return pj_receptor
-                else:
-                    text_speed("That character doesn't even exist!")
-            except ValueError:
-                text_speed("Invalid option, please enter a number.")
-
         
 
 #***********************************************************************
@@ -234,9 +214,11 @@ class Arquero(Personaje):
         self.vida_original = self.puntos_vida
         self.count_venenosa = 2
         self.count_certera = 1
+        self.cont_flechas_curativas = 2
         
     def mostrar_flechas(self):
         print(f"{self.nombre} have: {self.count_venenosa} poison arrows.")
+        print(f"{self.nombre} have: {self.cont_flechas_curativas} healing arrows.")
         
         
     def crear_flecha_venenosa(self):
@@ -259,10 +241,18 @@ class Arquero(Personaje):
     def flecha_curativa(self, objetivo):        
         curacion = round(self.vida_original * 0.01)  
         objetivo.puntos_vida += curacion
+        self.cont_flechas_curativas -= 1
         # Asegurarnos de que no supere los puntos de vida originales
         if objetivo.puntos_vida > objetivo.vida_original:
             objetivo.puntos_vida = objetivo.vida_original
-        print(f"{self.nombre} ha disparado una flecha curativa a {objetivo.nombre} y le ha restaurado {curacion} punto de vida!")
+        print(f"{self.nombre} shoot a healing arrow to {objetivo.nombre} and restored an amount of {curacion} life points!")
+        
+    def crear_flecha_curativa(self):
+        if self.cont_flechas_curativas < 2:
+            self.cont_flechas_curativas+= 1
+            print(f"{self.nombre} create a healing arrow, now you have {self.cont_flechas_curativas} healing arrows")
+        else:
+            print("you can only have two healing arrows")
         
     def flecha_certera(self, objetivo, ronda):
         if ronda % 1 !=0:
@@ -290,23 +280,22 @@ class Arquero(Personaje):
 #***********************************************************************
 
 class Fundador(Mago):
-    def __init__(self, nombre, color = Fore.BLUE):
-        Personaje.__init__(self, nombre, "Founder")
+    cont_pociones_fundador = 0
+    def __init__(self, nombre):
+        super().__init__(nombre, "Founder")
         self.fuerza = 100
         self.puntos_vida = 110
         self.defensa = 110
         self.ataque = 110
-        self.barra_mana = None
-        self.color = color
+        # Guardamos los valores máximos/iniciales de cada atributo
         self.fuerza_original = self.fuerza
         self.vida_original = self.puntos_vida        
         self.defensa_original = self.defensa
         self.ataque_original = self.ataque
         self.bolsillo_pociones_fundador = []
         self.estado_ataque_final = False
-        self.mana = None
         text_speed(f"{self.nombre} has founded a clan.")
-
+        
     def crear_pociones(self):
         cura_aleatoria = random.randint(10, 25)
         if self.cont_pociones_fundador <= 3:
@@ -424,6 +413,8 @@ class Fundador(Mago):
                     text_speed(f"{clanes[elegir_clan]} doesn't even exist!")
             except ValueError:
                 text_speed("Please, select by number")
+
+
                 
     def _atacar_desesperado_clan_aleatorio(self, clanes_filtrado):
         clan_random = random.choice(clanes_filtrado) # * Selección del clan de manera aleatoria *
@@ -464,6 +455,37 @@ class Fundador(Mago):
         text_speed(f"-Strength: {self.fuerza}\n-Life Points: {self.puntos_vida}\n-Defense: {self.defensa}\n-Attack: {self.ataque}")
 #***********************************************************************
 
+if __name__=="__main__":
+    fundador = Fundador("f")
+    arquero1 = Arquero("a1")
+    guerrero1 = Guerrero("g1")
+    guerrero2 = Guerrero("g2")
+    mago1 = Mago("m1")
+    
+    arquero1.flecha_venenosa(guerrero1)
+    print(guerrero1)
+    print()
+    arquero1.realizar_ataque(guerrero2)
+    print(guerrero2)    
+    
+    
+    arquero2 = Arquero("a2")
+    arquero3 = Arquero("a3")
+    arquero4 = Arquero("a4")
+    arquero5 = Arquero("a5")
 
-if __name__ == "__main__":
- pass
+    # arquero1.flecha_venenosa(fundador)
+    # print(fundador)
+    # arquero2.flecha_venenosa(arquero5)
+    # print(arquero5)
+    # arquero5.flecha_venenosa(arquero5)
+    # print(arquero5)
+    # arquero4.flecha_venenosa(arquero5)
+    # print(arquero5)
+    # arquero4.flecha_venenosa(fundador)
+    # print(fundador)
+    # arquero4.flecha_venenosa(fundador)
+    # print(fundador)
+    # arquero4.flecha_venenosa(fundador)
+    # print(fundador)
+    pass
