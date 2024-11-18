@@ -191,18 +191,18 @@ class Mago(Personaje):
     
     def regeneracion_mana(self):
         regeneracion = random.randint(5, 25)
-        self.barra_mana += regeneracion
-        if self.barra_mana > 100:
-            self.barra_mana = 100
-        print(f"{self.nombre} genereated {regeneracion} of mana. mana's bar: {self.barra_mana}")
+        self.barra_mana = min(100, self.barra_mana + regeneracion)
+        print(f"\n{Fore.BLUE}✨ {self.nombre} has regenerated {regeneracion} mana points! ✨{Style.RESET_ALL}")
+        self.mostrar_barra_mana()
         
 
     def usar_hechizo(self, costo_mana):
         if self.barra_mana >= costo_mana:
             self.barra_mana -= costo_mana
-            print(f"{self.nombre} used a spell. Mana cost: {costo_mana}. Mana's bar: {self.barra_mana}")
+            print(f"\n{Fore.MAGENTA}🌟 {self.nombre} has cast a spell! Cost: {costo_mana} MP 🌟{Style.RESET_ALL}")
+            self.mostrar_barra_mana()
         else:
-            print(f"{self.nombre} haven't enough mana to use this spell.")
+            print(f"\n{Fore.RED}⚠️ {self.nombre} doesn't have enough mana to cast the spell! ⚠️{Style.RESET_ALL}")
 
     def ataque_doble(self, objetivo):
         if self.barra_mana == 100:
