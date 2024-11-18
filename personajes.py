@@ -199,16 +199,16 @@ class Mago(Personaje):
     def usar_hechizo(self, costo_mana):
         if self.barra_mana >= costo_mana:
             self.barra_mana -= costo_mana
-            print(f"\n{Fore.MAGENTA}🌟 {self.nombre} has cast a spell! Cost: {costo_mana} MP 🌟{Style.RESET_ALL}")
-            self.mostrar_barra_mana()
+            print(f"{self.nombre} you have used a spell. Cost mana: {costo_mana}.⭐ Mana Bar: {self.barra_mana}.⭐")
         else:
-            print(f"\n{Fore.RED}⚠️ {self.nombre} doesn't have enough mana to cast the spell! ⚠️{Style.RESET_ALL}")
+            print(f"{self.nombre} does not have enough mana to use the spell.❌")
+
 
     def ataque_doble(self, objetivo):
         if self.barra_mana == 100:
-            print(f"{self.nombre} launches double attack {objetivo.nombre}!")
+            print(f"\n{Fore.YELLOW}⚔️ {self.nombre} launches double attack on {objetivo.nombre}! ⚔️{Style.RESET_ALL}")
             estado_objetivo = self.realizar_ataque(objetivo,"double attack",10)
-
+        
     def __str__(self):
         return (f"{self.titulo}: {self.nombre}\n"
                 f"Strength: {self.fuerza}, Life Points: {self.puntos_vida}, "
@@ -349,6 +349,12 @@ class Fundador(Mago):
         self.estado_ataque_final = False
         self.mana = None
         text_speed(f"{self.nombre} has founded a clan.")
+
+ 
+    def mostrar_barra_mana(self):
+        barra = '|' + '█' * (self.barra_mana // 5) + '░' * ((100 - self.barra_mana) // 5) + '|'
+        return f"Mana: {self.barra_mana}/100 {barra}"    
+
         
     def crear_pociones(self):
         cura_aleatoria = random.randint(10, 25)
